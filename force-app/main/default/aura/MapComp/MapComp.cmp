@@ -1,0 +1,31 @@
+<aura:component controller="GISMap_CTR" implements="flexiPage:availableForRecordHome,force:hasRecordId,flexipage:availableForAllPageTypes" access="global" >
+	
+    <aura:attribute name="accToken" type="string"/>
+    <aura:attribute name="map" type="Object"/>
+    
+    <aura:attribute name="record" type="Object"/>
+    <aura:attribute name="fieldReference" type="Object"/>
+    <aura:attribute name="recordError" type="String"/>
+
+    <force:recordData aura:id="recordLoader"
+                      recordId="{!v.recordId}"
+                      fields="INS_BusinessStream__c"
+                      targetFields="{!v.fieldReference}"
+                      targetError="{!v.recordError}"
+                      />
+        
+    <ltng:require styles="/resource/LeafletLatest/leaflet/leaflet.css,
+                          /resource/LeafletLatest/LeafletDraw/leaflet.draw.css"
+                  
+                  scripts="/resource/LeafletLatest/leaflet/leaflet.js,
+                           /resource/LeafletLatest/lib/proj4-compressed.js,
+                           /resource/LeafletLatest/Proj4Leaflet-master/src/proj4leaflet.js,
+                           /resource/LeafletLatest/esri-leaflet-v2.2.3/dist/esri-leaflet.js,
+                           /resource/LeafletLatest/LeafletDraw/leaflet.draw.js"
+                           
+                  afterScriptsLoaded="{!c.jsLoaded}" />
+    
+    {!v.fieldReference.INS_BusinessStream__c}
+    
+    <div id="map" class="mapComponent"></div>hi
+</aura:component>

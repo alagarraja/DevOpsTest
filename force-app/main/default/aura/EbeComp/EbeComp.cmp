@@ -1,0 +1,8 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" controller="Ebe" >
+	<aura:attribute name="wrpObj" type= "object"/>
+    
+    <lightning:button label="Display JSON" onclick="{!c.callJSONctr}"/>
+    
+    <br/>
+    System Name: {!v.wrpObj.SystemName}
+</aura:component>

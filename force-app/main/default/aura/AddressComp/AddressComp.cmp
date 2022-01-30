@@ -1,0 +1,8 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" >
+	
+    <aura:attribute name="WO" type="Lead" default="{ 'sobjectType': 'WorkOrder' }"/> 
+    <div class="slds">
+    <force:inputField value="{!v.WO.Address}"></force:inputField> 
+    </div>
+
+</aura:component>

@@ -1,0 +1,40 @@
+<apex:page controller="WTDdaysEstimation" action="{!WTDdaysMethod}" showHeader="false">
+  <apex:form > 
+        <apex:pageBlock >
+            <Apex:pageBlockSection > 
+                                
+                <apex:outputPanel > 
+                    Resource: {!resourceName} <br/><br/>
+                    
+                    Working Shifts:
+                    <apex:pageBlockTable value="{!workingDaysList}" var="wd" style="width:300px;">
+                        <apex:column value="{!wd}"/>
+                    </apex:pageBlockTable>  <br/><br/>
+                    
+                    Non Working Shifts including absence:
+                    <apex:pageBlockTable value="{!nonWorkingDaysList}" var="wd" style="width:300px;">
+                        <apex:column value="{!wd}"/>
+                    </apex:pageBlockTable> <br/><br/>
+                    
+                </apex:outputPanel>  
+                
+                <apex:outputPanel > 
+                    
+                    Appointments worked on non-working shifts:
+                    <apex:pageBlockTable value="{!appointmentsList}" var="app" style="width:400px;">
+                       <apex:column headerValue="Appointment Number" value="{!app.ServiceAppointment.AppointmentNumber}"/>
+                       <apex:column headerValue="ActualStartTime" value="{!app.ServiceAppointment.ActualStartTime}"/>
+                       <apex:column headerValue="ActualEndTime" value="{!app.ServiceAppointment.ActualEndTime}"/>
+                    </apex:pageBlockTable>    <br/><br/>         
+                
+                    Final non working shifts after excluding the working hours:
+                    <apex:pageBlockTable value="{!finalDaysList}" var="wd" style="width:300px;">
+                        <apex:column value="{!wd}"/>
+                    </apex:pageBlockTable>  
+                    
+                </apex:outputPanel> 
+                
+            </Apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

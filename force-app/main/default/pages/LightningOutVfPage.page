@@ -1,0 +1,34 @@
+<apex:page >
+    <apex:includeLightning />
+   
+    <div id="LcDisplayId"></div> 
+    
+ <script>
+      // Here 'VfApp' Is Lightning Application Name
+    $Lightning.use("c:VfApp", function() {
+      /* 'LcForVf' is Lightning Component Name which we are Displaying In Vf Page 
+       * syntax for create lightning component dynamically :
+       * $Lightning.createComponent(String type, Object attributes, String locator, function callback) */
+    $Lightning.createComponent("c:LightningOutPageCancelBtn",
+    { 
+      // Set Lightning Component Attributes Property before creating Lightning Component In Visualforce page 
+        textColor : "Red",
+        currentUserName : '{!$User.FirstName} {!$User.LastName}' 
+    },
+   "LcDisplayId",
+    function(component) {
+        
+        component.set("v.recordId" , '{!$CurrentPage.parameters.Id}');
+        var recId = '{!$CurrentPage.parameters.Id}';
+        $A.eventService.addHandler({
+                event: 'force:navigateToObjectHome',
+                handler: function(event) {
+                    window.location = '/lightning/r/ServiceTerritoryMember/'+recId+'/view';
+                }
+            });
+            
+        
+    });
+ });
+ </script>
+</apex:page>

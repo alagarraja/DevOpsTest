@@ -1,0 +1,98 @@
+<apex:page standardController="WorkOrder" showHeader="false" sidebar="false">
+    
+    <apex:includescript value="//code.jquery.com/jquery-1.11.1.min.js" / >
+    <apex:includescript value="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js" />
+    <apex:stylesheet value="//cdn.datatables.net/1.10.4/css/jquery.dataTables.css" />
+    
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" ></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    
+     
+    <apex:stylesheet value="{!URLFOR($Resource.LeafletLatest, 'leaflet/leaflet.css')}" />
+    
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'leaflet/leaflet.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'lib/proj4-compressed.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'Proj4Leaflet-master/src/proj4leaflet.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'esri-leaflet-v2.2.3/dist/esri-leaflet.js')}"/>
+    
+    <!--Leaflet Draw -->
+    <apex:stylesheet value="{!URLFOR($Resource.LeafletLatest, 'LeafletDraw/leaflet.draw.css')}" />  
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'LeafletDraw/leaflet.draw.js')}"/>
+  
+    
+    <div id="map" style="width: 1500px; height: 1000px"></div>
+    
+    <script>
+        var crs = new L.Proj.CRS('EPSG:27700', '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs', {
+            origin: [-5781523.997920001, 4883853.592504997],
+            resolutions: [
+              132291.9312505292,
+              66145.9656252646,
+              26458.386250105836,
+              19843.789687579378,
+              13229.193125052918,
+              6614.596562526459,
+              2645.8386250105837,
+              1322.9193125052918,
+              661.4596562526459,
+              264.5838625010584,
+              132.2919312505292,
+              66.1459656252646,
+              26.458386250105836,
+              19.843789687579378,
+              13.229193125052918,
+              6.614596562526459,
+              2.6458386250105836,
+              1.3229193125052918,
+              0.6614596562526459
+            ]
+          });
+          
+          var map = L.map('map', {
+            crs: crs
+          }).setView([53.30364,-2.38119], 18);
+          
+          var drawnItems = L.featureGroup().addTo(map);
+
+          // The min/maxZoom values provided should match the actual cache thats been published. This information can be retrieved from the service endpoint directly.
+          L.esri.tiledMapLayer({
+            url: 'https://tiles.arcgis.com/tiles/qHLhLQrcvEnxjtPr/arcgis/rest/services/OS_Open_Background_2/MapServer',
+            maxNativeZoom: 20,
+            maxZoom: 100
+          }).addTo(map);
+          
+          L.control.layers({}, {'drawlayer':drawnItems}, { position: 'topright', collapsed: true }).addTo(map);
+          
+          map.addControl(new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems,
+                poly : {
+                    allowIntersection : false
+                }
+            },
+            draw: {
+                polyline: {
+                    shapeOptions: {
+                        color: 'red',
+                        weight: 3
+                    }
+                },
+                
+                polygon : {
+                    allowIntersection: false,
+                    showArea:true,
+                    shapeOptions: {
+                        color: '#8ca2ea',
+                        weight: 4,
+                        opacity: 2,
+                    },
+                },
+                
+                rectangle : false,
+                marker: false,
+                circlemarker:false,
+                circle:false
+            }
+        }));
+    </script>
+</apex:page>

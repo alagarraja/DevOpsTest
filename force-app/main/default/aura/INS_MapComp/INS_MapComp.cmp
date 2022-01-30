@@ -1,0 +1,45 @@
+<aura:component controller="GISMap_CTR">
+	
+    <aura:attribute name="accToken" type="string"/>
+    <aura:attribute name="map" type="Object"/>
+    <ltng:require styles="/resource/leaflet/leaf_test/leaflet/leaflet.css"
+                  scripts="/resource/leaflet/leaf_test/leaflet/leaflet.js,
+                           /resource/leaflet/leaf_test/lib/proj4-compressed.js,
+                           /resource/leaflet/leaf_test/Proj4Leaflet-master/src/proj4leaflet.js,
+                           /resource/leaflet/leaf_test/esri-leaflet-v2.2.3/dist/esri-leaflet.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/Leaflet.draw.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/Leaflet.Draw.Event.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/handler/Edit.Poly.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/handler/Edit.SimpleShape.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/handler/Edit.Rectangle.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/handler/Edit.Marker.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/handler/Edit.CircleMarker.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/handler/Edit.Circle.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/handler/Draw.Feature.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/handler/Draw.Polyline.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/handler/Draw.Polygon.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/handler/Draw.SimpleShape.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/handler/Draw.Rectangle.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/handler/Draw.Circle.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/handler/Draw.Marker.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/handler/Draw.CircleMarker.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/ext/TouchEvents.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/ext/LatLngUtil.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/ext/GeometryUtil.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/ext/LineUtil.Intersect.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/ext/Polyline.Intersect.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/ext/Polygon.Intersect.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/Control.Draw.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/Tooltip.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/Toolbar.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/draw/DrawToolbar.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/EditToolbar.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/handler/EditToolbar.Edit.js,
+                           /resource/Leaflet_Draw/Leaflet.draw-develop/src/edit/handler/EditToolbar.Delete.js"
+                  
+        		  afterScriptsLoaded="{!c.getTokens}" />
+    
+    <div id="map"></div>
+    
+
+</aura:component>

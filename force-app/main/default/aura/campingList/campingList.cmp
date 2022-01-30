@@ -1,0 +1,6 @@
+<aura:component controller="campingCTR" >
+	
+    <aura:attribute name="CampingList" type="List" />
+    <aura:handler name="init" value="{!this}" action="{!c.myAction}" />
+
+</aura:component>

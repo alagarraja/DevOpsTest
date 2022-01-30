@@ -1,0 +1,13 @@
+<apex:page controller="dateTestPageCTR" docType="html-5.0">
+  
+  <apex:form >
+      Shut Off Date/Time <br/> 
+      <apex:input type="datetime-local" value="{!shutoffdate}" /> 
+      
+      <br/> <br/>
+      
+      Shut Off Date/Time - User Timezone<br/> 
+      <apex:input type="datetime-local" value="{!shutoffdate}" />
+  </apex:form>
+  
+</apex:page>

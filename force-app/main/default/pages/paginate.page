@@ -1,0 +1,13 @@
+<apex:page controller="thousandLimit">    
+   <apex:pageBlock >
+   {!thousandBlocks.size}
+      <apex:repeat value="{!thousandBlocks}" var="block">
+            <apex:repeat value="{!block.cases}" var="c">
+                {!c.Id} &nbsp; {!c.CaseNumber} <br/>
+                <!-- <apex:column value="{!c.Id}"/>
+                <apex:column value="{!c.CaseNumber}"/>
+                <apex:column value="{!c.owner.name}"/> -->
+            </apex:repeat>
+        </apex:repeat>
+     </apex:pageBlock>  
+</apex:page>

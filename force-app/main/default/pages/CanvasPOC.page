@@ -1,0 +1,82 @@
+<apex:page showHeader="false">
+    <script type="text/javascript" src="{!URLFOR($Resource.Canvas_SDK,'SalesforceCanvasJavascriptSDK-master/js/canvas-all.js')}" /> 
+    <script type="text/javascript">
+        
+                
+        function passData(){
+            
+            alert('call web flow...');
+            const queryString = window.location.search;
+            alert(queryString);
+            
+            Sfdc.canvas(function() {
+                alert('method called..');
+                
+                
+                var login    = Sfdc.canvas.byId("login"),
+                    loggedIn = Sfdc.canvas.oauth.loggedin(),
+                    token = Sfdc.canvas.oauth.token()
+                    
+                    alert(token);
+                    
+            });
+            
+            Sfdc.canvas.client.publish(sr.client, {
+                            name: 'wfm.datatransfer',
+                            payload: { "some":" web flow" }
+                        });
+                        
+            alert('PUBLISHER method called...');
+            
+            Sfdc.canvas.client.refreshSignedRequest(function(data){
+                    if(data.status == 200){
+                        alert('SUCCESS...');
+                        var encodedSignedRequest = data.payload.response;
+                        var sr = JSON.parse(Sfdc.canvas.decode(encodedSignedRequest.split('.')[1]));
+                        Sfdc.canvas.client.publish(sr.client, {
+                            name: 'wfm.datatransfer',
+                            payload: { "some":" data" }
+                        });
+                    }else{
+                        alert('error');
+                        loginHandler();
+                    }
+                });
+        }
+    
+        function loginHandler(e) {
+            var uri;
+            if (! Sfdc.canvas.oauth.loggedin()) {
+                uri = Sfdc.canvas.oauth.loginUrl();
+                Sfdc.canvas.oauth.login(
+                    {uri : uri,
+                        params: {
+                            response_type : "code",
+                            client_id : "3MVG9Y6d_Btp4xp7sLSiM8RbABn5n0vQZ_VGlj7gydRX_adPLbrM0sjvMz1wO1WwN_EKJhpt._jsFkyXZpWnT",
+                            redirect_uri : encodeURIComponent(
+                                "https://eclipse-developer-edition.my.salesforce.com/")
+                        }});
+            }else {
+                Sfdc.canvas.oauth.logout();
+                login.innerHTML = "Login";
+                Sfdc.canvas.byId("oauth").innerHTML = "";
+            }
+            return false;
+        }
+        
+        Sfdc.canvas.onReady(function(){
+            //loginHandler();
+        });
+    </script>
+    
+    <h1 id="header">Canvas OAuth App</h1>
+    <div>
+        access_token = <span id="oauth"></span>
+    </div>
+    <div>
+        <a id="login" href="#">Login</a><br/>
+    </div>
+    
+    <button onclick="passData()">Singed Request -  Pass Data</button> 
+
+</apex:page>

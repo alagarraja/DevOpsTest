@@ -1,0 +1,29 @@
+<aura:component implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,force:lightningQuickAction" access="global" >
+	            
+    <lightning:overlayLibrary aura:id="overlayLib" class="popOver"/>
+    
+    <div class="slds-page-header">
+        <p class="slds-text-heading--label">Contacts</p>
+        <h1>My Contacts</h1>
+    </div> 
+    
+    <lightning:input aura:id="territoryform" label="Service Territory"
+                     name="territoryName"
+                     required="true"/> 
+    <lightning:select label="Territory Type">
+        <option value="pri">Primary</option>
+        <option value="sec">Secondary</option>
+        <option value="reloc">Relocation</option>
+    </lightning:select>
+    <lightning:textarea name="address" label="Address"/>
+    <lightning:input aura:id="city" label="City"/>
+    <lightning:input aura:id="postalCode" label="Zip/Postal Code"/>
+    <lightning:input aura:id="stateProvince" label="State/Province"/>
+    <lightning:input aura:id="country" label="Country"/>
+    <lightning:input aura:id="operatingHours" label="Operating Hours"/>
+    
+    <lightning:button variant="brand" name="modal" label="Save" onclick="{!c.handleShowModalFooter}"/>
+    <lightning:button variant="brand" label="Cancel" title="Cancel" onclick="{!c.closeAction}"/>
+    
+    
+</aura:component>

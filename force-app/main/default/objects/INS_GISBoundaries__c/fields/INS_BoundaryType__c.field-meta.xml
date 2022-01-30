@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>INS_BoundaryType__c</fullName>
+    <externalId>false</externalId>
+    <label>Boundary Type</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Impacted Boundary</fullName>
+                <default>false</default>
+                <label>Impacted Boundary</label>
+            </value>
+            <value>
+                <fullName>Disturbance Boundary</fullName>
+                <default>false</default>
+                <label>Disturbance Boundary</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,30 @@
+<aura:component implements="flexipage:availableForAllPageTypes,force:hasRecordId,force:lightningQuickActionWithoutHeader,lightning:actionOverride,force:hasSObjectName" access="global">
+	<aura:attribute name="recordId" type="String" />
+    
+    <aura:attribute name="resRecord" type="Object" />
+	<aura:attribute name="resourceName" type="String" />
+    <aura:attribute name="resourceId" type="String" />
+    <aura:attribute name="checkLoad" type="Boolean" default="false"/>
+    
+    
+	<force:recordData layoutType="FULL"
+                  recordId="{!v.recordId}"
+                  targetFields="{!v.resRecord}"
+                  fields="Id, Name, OwnerId"       
+                  recordUpdated="{!c.doInit}" />
+    
+    <!-- Create attribute to store lookup value as a sObject--> 
+    <aura:attribute name="SRselectedLookUpRecord" type="sObject" default="{}"/>
+    <aura:attribute name="STselectedLookUpRecord" type="sObject" default="{}"/>
+    <aura:attribute name="OHselectedLookUpRecord" type="sObject" default="{}"/>
+    
+   <!-- <aura:handler name="init" value="{!this}" action="{!c.doInit}"/> -->
+    
+    <aura:if isTrue="{!v.checkLoad}">
+        <c:customLookup objectAPIName="ServiceResource" selectedRecord="{!v.SRselectedLookUpRecord}" recordId="{!v.resourceId}" recordName="{!v.resourceName}" label="Service Resource"/>
+        
+        <c:customLookup objectAPIName="ServiceTerritory" selectedRecord="{!v.STselectedLookUpRecord}" recordId="0Hh1t000000Tb0i" recordName="North" label="Service Territory"/>
+        
+        <c:customLookup objectAPIName="OperatingHours" selectedRecord="{!v.OHselectedLookUpRecord}" recordId="0OH1t000000TdFR" recordName="Customer Tech - CWTransformWeek1 - Tuesday" label="Operating Hours"/>   
+    </aura:if>
+</aura:component>

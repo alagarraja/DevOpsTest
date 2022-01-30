@@ -1,0 +1,775 @@
+<apex:page standardController="WorkOrder" extensions="INS_CaseMapController" showHeader="false" sidebar="false" action="{!mapOnloadAction}">
+    
+    <apex:includescript value="//code.jquery.com/jquery-1.11.1.min.js" / >
+    <apex:includescript value="//cdn.datatables.net/1.10.12/js/jquery.dataTables.min.js" />
+    <apex:stylesheet value="//cdn.datatables.net/1.10.4/css/jquery.dataTables.css" />
+    
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" ></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    
+     
+    <apex:stylesheet value="{!URLFOR($Resource.LeafletLatest, 'leaflet/leaflet.css')}" />
+    
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'leaflet/leaflet.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'lib/proj4-compressed.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'Proj4Leaflet-master/src/proj4leaflet.js')}"/>
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'esri-leaflet-v2.2.3/dist/esri-leaflet.js')}"/>
+    
+    <!--Leaflet Draw -->
+    <apex:stylesheet value="{!URLFOR($Resource.LeafletLatest, 'LeafletDraw/leaflet.draw.css')}" />  
+    <apex:includeScript value="{!URLFOR($Resource.LeafletLatest, 'LeafletDraw/leaflet.draw.js')}"/>
+    
+    <div id="map" style="width: 1500px; height: 1000px"></div>
+
+    <script>
+        
+        var j$ = jQuery.noConflict();
+            
+            
+        j$(document).ready(function(){
+            j$(".loadingIcon").hide();
+            j$('#popUp').show();
+            j$('[id*="addressSect"]').hide();
+            j$('[id*="assetsSect"]').hide();
+            j$('#mainBtn').hide();
+            j$('#lblMsg').hide();
+            
+            j$('[id*="paramField1"]').val('load');
+            toggleLayers(18);
+                        
+        });
+            
+        var crs = new L.Proj.CRS('EPSG:27700', '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs', {
+            origin: [-5781523.997920001, 4883853.592504997],
+            resolutions: [
+              132291.9312505292,
+              66145.9656252646,
+              26458.386250105836,
+              19843.789687579378,
+              13229.193125052918,
+              6614.596562526459,
+              2645.8386250105837,
+              1322.9193125052918,
+              661.4596562526459,
+              264.5838625010584,
+              132.2919312505292,
+              66.1459656252646,
+              26.458386250105836,
+              19.843789687579378,
+              13.229193125052918,
+              6.614596562526459,
+              2.6458386250105836,
+              1.3229193125052918,
+              0.6614596562526459
+            ]
+          });
+          var incidentLayer,baseLat,baseLong,baseLatLng,incidentLayer,featLayer;
+          var wwLaterlLine, wwGravity,wwPressurisedSewer,wwManHole,wwNetworkStructure;
+          var map = L.map('map', {
+            crs: crs
+          }).setView([53.30364,-2.38119], 18);
+          
+          var drawnItems = L.featureGroup().addTo(map);
+
+          // The min/maxZoom values provided should match the actual cache thats been published. This information can be retrieved from the service endpoint directly.
+          L.esri.tiledMapLayer({
+            url: 'https://tiles.arcgis.com/tiles/qHLhLQrcvEnxjtPr/arcgis/rest/services/OS_Open_Background_2/MapServer',
+            maxNativeZoom: 20,
+            maxZoom: 100
+          }).addTo(map);
+          
+          L.control.layers({}, {'drawlayer':drawnItems}, { position: 'topright', collapsed: true }).addTo(map);
+          
+                    
+          map.addControl(new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems,
+                poly : {
+                    allowIntersection : false
+                }
+            },
+            draw: {
+                polyline: {
+                    shapeOptions: {
+                        color: 'red',
+                        weight: 3
+                    }
+                },
+                
+                polygon : {
+                    allowIntersection: false,
+                    showArea:true,
+                    shapeOptions: {
+                        color: '#8ca2ea',
+                        weight: 4,
+                        opacity: 2,
+                    },
+                },
+                
+                rectangle : false,
+                marker: false,
+                circlemarker:false,
+                circle:false
+            }
+        }));
+        
+        var getPopupContent = function(layer) {
+            
+            if (layer instanceof L.Polygon) {
+                var latlngs = layer._defaultShape ? layer._defaultShape() : layer.getLatLngs();
+               return latlngs;
+            }else if(layer instanceof L.Polyline){
+            
+                var latlngs = layer.getLatLngs();
+                return latlngs;
+            }
+            return null;
+        };
+        
+        var layer,boundryLatLang, latLngVar;
+      
+        map.on(L.Draw.Event.CREATED, function(event) {
+           
+            layer = event.layer;
+            var drawType = event.layerType;
+            
+            var content = getPopupContent(layer);
+            boundryLatLang = '';
+            console.log('content---------->'+content.length);
+            for(var i=0 ; i<content.length ; i++){
+                if(boundryLatLang == ''){
+                    boundryLatLang = ('['+content[i].lng+','+content[i].lat+']');
+                    latLngVar = ('['+content[i].lat+','+content[i].lng+']');
+                }else{
+                    boundryLatLang = boundryLatLang + (',['+content[i].lng+','+content[i].lat+']');
+                    latLngVar = latLngVar + (',['+content[i].lat+','+content[i].lng+']');
+                }
+            }
+            alert('content---------->'+boundryLatLang);
+                        
+              
+            drawnItems.addLayer(layer);
+            
+            j$('#popUp').show();
+            
+        });
+        
+        map.on(L.Draw.Event.EDITED, function(event) {
+            
+            
+        });
+        
+        map.on('zoomend', function () {
+            
+            
+            toggleLayers( map.getZoom() );
+            
+        });
+        
+            
+        wwLaterlLine = L.esri.featureLayer({
+            url: 'https://services5.arcgis.com/5eoLvR0f8HKb7HWP/arcgis/rest/services/WWLATERALLINE/FeatureServer/0/query?token='+'{!gisAuthToken}',
+            style:{color:'brown',weight:2}
+        }).addTo(map); 
+        
+        wwGravity = L.esri.featureLayer({
+            url: 'https://services5.arcgis.com/5eoLvR0f8HKb7HWP/arcgis/rest/services/WWGRAVITYSEWER/FeatureServer/0/query?token='+'{!gisAuthToken}',
+            style:{color:'blue',weight:2}
+        }).addTo(map); 
+        
+        
+        wwPressurisedSewer = L.esri.featureLayer({
+            url: 'https://services5.arcgis.com/5eoLvR0f8HKb7HWP/arcgis/rest/services/WWPRESSURISEDSEWER/FeatureServer/0/query?token='+'{!gisAuthToken}',
+            style:{color:'purple',weight:2}
+        }).addTo(map); 
+        
+        wwManHole = L.esri.featureLayer({
+            url: 'https://services5.arcgis.com/5eoLvR0f8HKb7HWP/arcgis/rest/services/WWMANHOLE/FeatureServer/0/query?token='+'{!gisAuthToken}',
+            pointToLayer: function (geojson, latlng) {
+                return L.circleMarker(latlng, {
+                    //pane: 'blockpoints',
+                    color: 'red',
+                    radius: 5
+                });
+            }
+        }).addTo(map); 
+       
+        wwNetworkStructure = L.esri.featureLayer({
+            url: 'https://services5.arcgis.com/5eoLvR0f8HKb7HWP/arcgis/rest/services/WWNETWORKSTRUCTURE/FeatureServer/0/query?token='+'{!gisAuthToken}',
+            style:{color:'pink',weight:2}
+        }).addTo(map); 
+       
+        
+        function toggleLayers(zoomLvl){
+            
+            
+            
+            if( zoomLvl == 17 ) {
+                                
+                if(!map.hasLayer(wwLaterlLine) ){
+                    map.addLayer(wwLaterlLine);
+                }
+                
+                if(map.hasLayer(wwGravity) ){
+                    map.removeLayer(wwGravity);
+                }
+                
+                if(map.hasLayer(wwPressurisedSewer) ){
+                    map.removeLayer(wwPressurisedSewer);
+                }
+                
+                if(!map.hasLayer(wwManHole) ){
+                    map.addLayer(wwManHole);
+                }
+                
+                if(!map.hasLayer(wwNetworkStructure) ){
+                    map.addLayer(wwNetworkStructure);
+                }
+                
+            }
+            
+            if( zoomLvl != 17 ) {
+                
+               
+                if(!map.hasLayer(wwLaterlLine) ){
+                    map.addLayer(wwLaterlLine);
+                }
+                
+                if(!map.hasLayer(wwGravity) ){
+                    map.addLayer(wwGravity);
+                }
+                
+                if(!map.hasLayer(wwPressurisedSewer) ){
+                    map.addLayer(wwPressurisedSewer);
+                }
+                
+                if(map.hasLayer(wwManHole) ){
+                    map.removeLayer(wwManHole);
+                }
+                
+                if(map.hasLayer(wwNetworkStructure) ){
+                    map.removeLayer(wwNetworkStructure);
+                }
+            } 
+        }
+        
+        var polyLayers = [];
+        var labelKey = [];
+        var existingPolygon = JSON.parse('{!tempStr}');
+        var colorMap = JSON.parse('{!colorStr}');
+        
+        for(var key in existingPolygon ) {
+            
+            var arry = [];
+                        
+            for(var innerKey in existingPolygon[key]) {
+                var tmp = JSON.parse( existingPolygon[key][innerKey] );
+                arry.push([ tmp[0], tmp[1]]);
+            }
+            
+            var colorVar = colorMap[key];
+            
+            var polygon1;
+            if(colorVar == 'Impacted Boundary'){
+                polygon1 = L.polygon([arry]).addTo(map).bindTooltip( key , {permanent: true, direction:"center", className: 'myCSSClass'});
+            }else{
+                polygon1 = L.polygon([arry]).addTo(map).setStyle({
+                    color: '#f2a874',
+                    weight: 4,
+                    opacity: 2
+                }).bindTooltip( key , {permanent: true, direction:"center", className: 'disturbCls'});
+            }
+            
+            polyLayers.push(polygon1);
+            labelKey.push(key);
+        }
+        
+        var i=0;
+        for(layer of polyLayers ) {
+            drawnItems.addLayer(layer);
+            i++;
+        }
+        
+        function setLayerName(){
+            var labelName = j$('#polyLabel').val();
+            labelName.trim();
+            
+            var selectedType = j$('[id*="typeField"]').find(":selected").val();
+                        
+            if (labelName == "" || labelName.replace(/\s/g, '').length == 0 || selectedType == "") {
+                j$('#lblMsg').show();
+                
+            }else if(selectedType == 'Disturbance Boundary'){
+                
+                addBoundary(labelName,latLngVar,selectedType);
+                
+                layer.setStyle({
+                    color: '#f2a874',
+                    weight: 4,
+                    opacity: 2
+                });
+                layer.bindTooltip(labelName, {permanent: true, direction:"center", className: 'disturbCls'});
+                j$('#popUp').hide();
+                    
+            }else{
+                addBoundary(labelName,latLngVar,selectedType);
+                
+                j$('#lblMsg').hide();
+                j$('#labelSect').hide();
+                j$('#mainBtn').show();
+                
+                layer.bindTooltip(labelName, {permanent: true, direction:"center", className: 'myCSSClass'});
+            }
+        }
+        
+        function closePopup(){
+            
+            /*
+            if( map.hasLayer(layer)) {
+                alert('yes has layer' );
+                map.removeLayer(layer);
+            } 
+            
+            var r = confirm("Closing the popup will delete the drawn polygons.");
+            if (r == true) {
+                j$('#popUp').hide(); 
+            } else {
+                
+            } */
+            j$('#popUp').hide(); 
+        }
+        
+        function getImpactedCustomers(){
+            j$('#mainBtn').hide();
+            j$('#addressSect').show();
+            getCustomers( boundryLatLang );
+        } 
+        
+        function getImpactedAssets(){
+            alert('get assets --> '+ boundryLatLang );
+            j$('#mainBtn').hide();
+            j$('#assetsSect').show();
+            getAssets( boundryLatLang );
+        }          
+        
+        function applyJqueryDatatable(){
+            alert('table style');
+            var questionTable = j$('[id$="assetTable"],[id$="addressTable"]').DataTable({
+                        "bFilter" : false,               
+                        "bLengthChange": false,
+                        "scrollY": "320px",
+                        "scrollCollapse": true,
+                        "scrollX": true,
+                        "bDestroy": true,
+                        "searching": false,
+                        "lengthMenu": [[10], [10]],
+                        "bSort":false,
+                        "bPaginate":true,
+                        "sPaginationType":"full_numbers",
+                        "iDisplayLength": 8,
+                        columnDefs: [
+                            { width: 100, targets: 0 },
+                            { width: 300, targets: 1 }
+                            
+                        ],
+                        fixedColumns:  true
+  
+                  });
+        }
+        
+        function showLoading(){
+            j$(".loadingIcon").show();
+        }
+        
+        function closeLoading(){
+            j$(".loadingIcon").hide();
+            applyJqueryDatatable();
+        }
+    </script>
+    
+    <!--featLayer = L.esri.featureLayer({
+            url: 'https://services5.arcgis.com/5eoLvR0f8HKb7HWP/ArcGIS/rest/services/DMA/FeatureServer/0/query?token='+'{!gisAuthToken}',
+            style:{color:'brown',weight:2}
+        }).addTo(map); 
+        
+        featLayer = L.esri.featureLayer({
+            url: 'https://services5.arcgis.com/5eoLvR0f8HKb7HWP/Arcgis/rest/services/CWLATERALLINE/FeatureServer/0/query?token='+'{!gisAuthToken}',
+            style:{color:'brown',weight:2}
+        }).addTo(map);
+        
+        .setView([53.448904,-2.360773], 16);
+        
+        .setView([53.30364,-2.38119], 16);  //Gruntford-->
+        
+       <apex:form id="frm" >
+            
+            <apex:actionFunction name="addBoundary" action="{!createBoundaries}" reRender="mainBtn"> 
+                <apex:param name="labelName" assignTo="{!labelTxt}" value=""/>          
+                <apex:param name="boundaryPoints" assignTo="{!polyMarker}" value=""/>          
+                <apex:param name="type" assignTo="{!boundaryType}" value=""/>          
+            </apex:actionFunction>
+                    
+            <apex:actionFunction name="getCustomers" action="{!getAffectedAddress}" reRender="addressSect" status="ajaxStatus"> 
+                <apex:param name="polyCoOrds" assignTo="{!polyMarker}" value=""/>          
+            </apex:actionFunction>
+            
+            <apex:actionFunction name="getAssets" action="{!getAffectedAssets}" reRender="assetsSect" status="ajaxStatus"> 
+                <apex:param name="polyCoOrds" assignTo="{!polyMarker}" value=""/>          
+            </apex:actionFunction> 
+            
+            <apex:actionStatus id="ajaxStatus" onstart="showLoading()" onstop="closeLoading()" />
+            
+            <!-- Popup Box -->
+            <div id="popUp" >
+                <apex:outputPanel id="tstpopup" styleClass="mainDiv"  >
+                    <apex:outputPanel id="innerDiv" styleClass="popupBackground" layout="block" />
+                    
+                    <apex:outputPanel id="searchSect" styleClass="custPopup" layout="block" >
+                        
+                        <div id="topPanel">
+                            <div class="closeCls" >
+                                <apex:commandButton value="Close" styleClass="closeBtn" onclick="closePopup(); return false;"/>
+                            </div>
+                            
+                            <apex:pageMessages id="msgs" />
+                        </div>
+                        
+                       <center> 
+                           
+                           <!-- Get label details -->
+                           <div id="labelSect" class="labelSectionCls">
+                               <div id="lblMsg" class="lblErr"> * Both label and type are required </div> <br/>
+                               
+                               <apex:outputLabel for="polyLabel" > Enter Label </apex:outputLabel>
+                               <input id="polyLabel" class="slds-input inputFieldCls" type="text" placeholder=" Enter polygon label name" value="{!polygonLabelName}" style="width: 30%; margin: 10px;height:30px;"/> <br/>
+                               
+                               <apex:outputLabel for="typeField" > Select Type  </apex:outputLabel>
+                               <apex:selectList value="{!selectedType}" id="typeField" label="Type" size="1" multiselect="false" style="width: 30%; margin: 10px; height:30px;" styleClass="inputFieldCls"> 
+                                   <apex:selectOptions value="{!boundaryTypes}"/> 
+                               </apex:selectList>  <br/><br/>
+                               
+                               <apex:commandButton value="Next" onclick="setLayerName(); return false;"  styleClass="btn-primary" style="width: 60px !important;" reRender="divCls"/> 
+                               
+                           </div>                    
+                           
+                           <!-- Affected address & locations button -->
+                           <div id="mainBtn" class="divCls">
+                               <apex:commandButton value="Get Impacted Customers" onclick="getImpactedCustomers(); return false;" styleClass="btn-primary" style="width: 300px !important;height: 50px;" /> <br/><br/>
+                               <apex:commandButton value="Get Assest"  onclick="getImpactedAssets(); return false;" styleClass="btn-primary" style="width: 300px !important;height: 50px;" /> <br/>    
+                           </div>
+                       </center>
+                        
+                    <!-- Address result table -->   
+                    <apex:outputPanel id="addressSect" >
+                    
+                        <div class="Questions" style="padding:5px 5px 0 5px; width=100%; ">  
+                            <div class = "panel panel-primary">
+                                <div class = "panel-heading">
+                                  <h3 class= "panel-title" style="font-size:14px !important ">Impacted Address</h3>
+                                  <apex:commandButton value="Save" action="{!saveImpactedCustomers}" styleClass="btn-success" Style="float:right;" id="saveAddress" reRender="msgs" status="ajaxStatus" /> 
+                                </div>
+                                
+                                <div class = "panel-body">
+                                    <table id="addressTable" class="display" cellspacing="0" width="100%">
+                                    
+                                        <thead class="labelCls">
+                                            <tr width="100%">
+                                                <th width="5%" >Select</th>
+                                                <th width="25%" >Address Id</th>
+                                                <!-- <th width="10%">X </th>
+                                                <th width="15%">Y </th> --> 
+                                                <th width="10%">DC Code</th>
+                                                <th width="35%">Drainage Area </th>
+                                                <th width="25%">Dry/Wet? </th>
+                                            </tr>
+                                        </thead>
+                                        
+                                        <tbody>
+                                            <apex:variable value="{!0}" var="mainIndex" />
+                                            <apex:repeat value="{!mainAddressList}" var="main">
+                                                
+                                                <apex:variable value="{!0}" var="innerIndex" />
+                                                <apex:repeat value="{!main}" var="adr"> 
+                                                    <tr class="valueCls" width="100%">
+                                                        <td  width="5%"> 
+                                                            <apex:inputCheckbox value="{!adr.selectedRec}" style="height: 11px;"/> {!mainIndex} : {!innerIndex}
+                                                        </td>
+                                                        <td  width="25%"> {!adr.addressId}</td>
+                                                        <!--<td  width="10%"> {!adr.xCoOrd}</td>
+                                                        <td  width="15%"> {!adr.yCoOrd}</td> -->
+                                                        <td  width="10%"> {!adr.dcCode}</td>
+                                                        <td  width="35%"> {!adr.daCode}</td>
+                                                        <td  width="25%">
+                                                            <apex:selectList value="{!adr.selectedDryWet}" size="1" > 
+                                                                <apex:selectOptions value="{!dryWetOpt}" /> 
+                                                            </apex:selectList>
+                                                        </td>
+                                                    </tr>
+                                                    <apex:variable value="{!innerIndex + 1}" var="innerIndex" />
+                                                </apex:repeat>  
+                                                
+                                                <apex:variable value="{!mainIndex + 1}" var="mainIndex" />
+                                            </apex:repeat>
+                                            
+                                            <!-- <apex:repeat value="{!addressList}" var="adr">  
+                                                <tr class="valueCls" width="100%">
+                                                    <td  width="5%"> 
+                                                        <apex:inputCheckbox value="{!adr.selectedRec}" style="height: 11px;"/>
+                                                    </td>
+                                                    <td  width="25%"> {!adr.addressId}</td>
+                                                    <td  width="10%"> {!adr.xCoOrd}</td>
+                                                    <td  width="15%"> {!adr.yCoOrd}</td>
+                                                    <td  width="10%"> {!adr.dcCode}</td>
+                                                    <td  width="35%"> {!adr.daCode}</td>
+                                                    <td  width="25%">
+                                                        <apex:selectList value="{!adr.selectedDryWet}" size="1" > 
+                                                            <apex:selectOptions value="{!dryWetOpt}" /> 
+                                                        </apex:selectList>
+                                                    </td>
+                                                </tr>
+                                            </apex:repeat> -->
+                                        </tbody>
+                                    </table>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </apex:outputPanel>
+                    <!-- END of address table -->
+                     
+                     <!-- Assets result table -->   
+                    <apex:outputPanel id="assetsSect" >
+                          
+                        <div class="Assets" style="padding:5px 5px 0 5px; width=100%; ">  
+                            <div class = "panel panel-primary">
+                                <div class = "panel-heading">
+                                  <h3 class= "panel-title" style="font-size:14px !important ">Impacted Assets</h3>
+                                  <apex:commandButton value="Save" action="{!saveImpactedAssets}" styleClass="btn-success" Style="float:right;" id="saveAsset" reRender="msgs" status="ajaxStatus" /> 
+                                </div>
+                                
+                                <div class = "panel-body">
+                                    <table id="assetTable" class="display" cellspacing="0" width="100%">
+                                    
+                                        <thead class="labelCls">
+                                            <tr width="100%">
+                                                <th width="5%" >Select</th>
+                                                <th width="25%" >Address Id</th>
+                                            </tr>
+                                        </thead>
+                                        
+                                        <tbody>
+                                            <apex:repeat value="{!assetList}" var="ast">  
+                                                <tr class="valueCls" width="100%">
+                                                    <td  width="5%"> 
+                                                        <apex:inputCheckbox value="{!ast.selectedRec}" style="height: 11px;"/>
+                                                    </td>
+                                                    <td  width="25%"> {!ast.featureNum}</td>
+                                                    
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+                                    </table>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </apex:outputPanel> 
+                    <!-- END of address table -->
+                    
+                    </apex:outputPanel>
+                    
+                </apex:outputPanel>
+            </div>
+            
+            <!-- SPINNER -->
+            <apex:outputPanel id="spinnerPopUp" styleClass="loadingIcon" >
+                <apex:outputPanel id="innerSpinnerPopUp" styleClass="spinnerBackground" layout="block" />
+                
+                <apex:outputPanel id="iconId" styleClass="spinnerCls" layout="block" >
+                   <center> 
+                       <apex:image url="{!$Resource.INS_LoadingIcon}"  /> <br/><br/>
+                       <div style="color:#004B94;font-weight: 600;"> Loading... </div>
+                   </center>
+                </apex:outputPanel>
+                
+            </apex:outputPanel>
+        </apex:form>                      
+                    
+    <style>
+    
+        .inputFieldCls{
+            border: 1px solid rgb(221, 219, 218);
+            border-radius: .25rem;
+        }
+        
+        .labelCls {
+            font-weight: bold;
+            font-size:12px;
+        }
+        
+        .labelSectionCls{
+            
+            margin:0 auto;
+            padding: 20px;
+            align: center;
+            font-size:13px;
+            width: 100%;
+            height: 100%;
+            top: 25%;
+            position: absolute;
+        }
+        
+        .divCls{
+            
+            margin:0 auto;
+            padding: 20px;
+            align: center;
+            font-size:15px;
+            width: 100%;
+            height: 100%;
+            top: 25%;
+            position: absolute;
+        }
+        
+        .btnCls{
+            width: 350px;
+            height: 40px;
+        }
+        
+        .custPopup{
+            background-color: white;
+            border-radius: 5px;
+            border: 2px solid #337AB7;
+            z-index: 9999;
+            padding:20px;
+            width: 95%;
+            height: 95%;
+            position: absolute;
+            top:20px;
+            left: 2%;
+        }
+        
+        .spinnerBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+        }
+        
+        .popupBackground{
+            background-color:black;
+            opacity: 0.20;
+            filter: alpha(opacity = 20);
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 9998;
+        }
+        
+        .spinnerCls{
+           
+            background-color: white;
+            border-radius: 25px;
+            border: 2px solid #337AB7;
+            z-index: 9999;
+            padding:20px;
+            width: 160px;
+            position:absolute;
+            top:200px;
+            left:43%;
+        
+        }
+        
+        .myCSSClass {
+          background: #8ca2ea;
+          border: 2px #484d5e;
+        }
+        .leaflet-tooltip-left.myCSSClass::before {
+          border-left-color: cyan;
+        }
+        .leaflet-tooltip-right.myCSSClass::before {
+          border-right-color: cyan;
+        }
+        
+        .disturbCls {
+          background: #ef8032;
+          border: 2px #ce5d0e;
+        }
+        
+        .closeCls{
+            text-align: right;
+        }
+        
+        .labelCls {
+            font-weight: bold;
+            font-size:12px;
+            text-align:right;
+        }
+        
+        .valueCls {
+            padding-left:10px;
+            font-size: 11px;
+            align:left;
+            line-height: 6px;
+        }
+        
+        .btn.btn-primary {
+            color: #fff;
+            background-color: #337ab7;
+            border-color: #2e6da4;
+                background-image: none;
+        }
+        .btn.btn-primary:hover {
+            color: #fff;
+            background-color: #286090;
+            border-color: #204d74;
+        }
+        
+        .btn.closeBtn{
+            color: #213da5;
+            font-size: xx-small;
+            background-color: #337ab7;
+            border-color: #2e6da4;
+        }
+        
+        .btn.mainBtnCls{
+            width: 300px !important;
+            height: 50px;
+        }
+        
+        .lblErr{
+           
+            font-size: 11.5px;
+            color: red;
+        }
+        
+        .btn.btn-success {
+            color: #fff;
+            background-color: #f0ad4e;
+            border-color: #eea236;
+            width: 90px !important;
+            height: 25px;
+            background-image: none;
+            margin: -3px;
+        }
+        .btn.btn-success:hover {
+            color: #fff;
+            background-color: #EC971F;
+            border-color: #FF0000;
+         }
+         
+         .messageCell h4{ margin-top:3px; margin-bottom: 2px; color:#A51B00;font-style:italic; display: inline !important}
+         .message .messageText{  font-weight: bold; color: #A51B00;font-style:italic; }  
+         .errorM3 {    border-color: #A51B00;}
+         .message{    background-color: #FCF4F2}
+         
+        </style>
+</apex:page>

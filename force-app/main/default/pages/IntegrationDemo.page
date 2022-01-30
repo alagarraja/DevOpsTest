@@ -1,0 +1,10 @@
+<apex:page controller="IntegrationDemoCTR" showHeader="false" >
+  
+  <apex:form >
+      
+      <apex:pageBlock title="Response"> 
+          {!displayText}
+      </apex:pageBlock>
+  </apex:form>
+  
+</apex:page>

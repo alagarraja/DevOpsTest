@@ -1,0 +1,27 @@
+<apex:page >
+    <apex:slds />
+    
+    <div class="divCls">
+        <button class="slds-button slds-button_brand btnCls">Get Impacted Customers</button> <br/> <br/> 
+        <button class="slds-button slds-button_brand btnCls">Get Assest</button>
+    </div>
+    
+    <style>
+        .divCls{
+            
+            margin:0 auto;
+            padding: 20px;
+            align: center;
+            font-size:15px;
+            width: 100%;
+            height: 100%;
+            top: 25%;
+            position: absolute;
+        }
+        
+        .btnCls{
+            width: 350px;
+            height: 40px;
+        }
+    </style>
+</apex:page>
